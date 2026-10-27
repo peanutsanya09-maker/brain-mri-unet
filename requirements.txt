@@ -1,0 +1,7 @@
+# Verified on Python 3.11.17; this machine uses torch 2.11.0+cu128.
+# Install the appropriate CUDA build of torch first on a new machine.
+# torch==2.11.0 also accepts the installed local-version build +cu128.
+torch==2.11.0
+numpy==2.4.6
+Pillow==12.3.0
+matplotlib==3.11.2
