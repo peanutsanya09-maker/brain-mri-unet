@@ -2,6 +2,16 @@ __pycache__/
 *.py[cod]
 .venv/
 .idea/
+.vscode/
+.ipynb_checkpoints/
 data/
 outputs/
 .pytest_cache/
+
+# Local model exports and credentials
+*.pt
+*.pth
+*.onnx
+.env
+.env.*
+!.env.example

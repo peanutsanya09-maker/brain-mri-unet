@@ -1,0 +1,16 @@
+{
+  "dice": 0.8791834445411116,
+  "iou": 0.8457288756853828,
+  "positive_dice": 0.7591617711052088,
+  "patient_dice": 0.7749278867993966,
+  "empty_false_positive_rate": 0.05459770114942529,
+  "slices": 540,
+  "patients": 16,
+  "loss": 0.07304733551661936,
+  "split": "test",
+  "checkpoint": "outputs/unet256/best.pt",
+  "epoch": 29,
+  "threshold": 0.5,
+  "image_size": 256,
+  "smoke_only": false
+}

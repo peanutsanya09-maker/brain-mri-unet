@@ -1,0 +1,5 @@
+-r requirements.txt
+
+# Optional: run brain_mri_unet.ipynb in an editor with Jupyter support.
+ipython==9.17.1
+ipykernel==7.3.0

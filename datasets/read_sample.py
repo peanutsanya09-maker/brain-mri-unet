@@ -1,3 +1,14 @@
+"""学习入口：单张读取 → Dataset → 患者划分 → DataLoader。
+
+在项目根目录执行：python -m datasets.read_sample
+"""
+from pathlib import Path
+import sys
+
+# 兼容 IDE 的“运行当前文件”，同时支持推荐的 python -m 方式。
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from datasets.mri import(
     discover, 
     read_pair, 
@@ -6,18 +17,18 @@ from datasets.mri import(
     split_patients
 )
 
-from pathlib import Path
-
 import numpy as np
 
 import torch
+from torch.utils.data import DataLoader
 
-def main():
+def main(data_root=None):
 
     # 找到项目根目录
     project_root = Path(__file__).resolve().parent.parent
 
-    data_root = project_root / "data" / "kaggle_3m"
+    if data_root is None:
+        data_root = project_root / "data" / "kaggle_3m"
 
     records = discover(data_root)
 
@@ -97,6 +108,44 @@ def main():
     assert sum(len(rows) for rows in splits.values()) == len(records)
 
     print("划分检查通过：患者互不重叠，样本数量完整")
+
+    # Dataset 每次返回一个样本；DataLoader 将多个样本堆成一个 batch。
+    train_dataset = MRIDataset(data_root, splits["train"], augment=True)
+    val_dataset = MRIDataset(data_root, splits["val"])
+    test_dataset = MRIDataset(data_root, splits["test"])
+
+    batch_size = 4
+    generator = torch.Generator().manual_seed(42)
+    train_loader = DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True,
+        num_workers=0, generator=generator,
+    )
+    val_loader = DataLoader(
+        val_dataset, batch_size=batch_size, shuffle=False, num_workers=0,
+    )
+    test_loader = DataLoader(
+        test_dataset, batch_size=batch_size, shuffle=False, num_workers=0,
+    )
+
+    for name, data_loader in (
+        ("train", train_loader), ("val", val_loader), ("test", test_loader)
+    ):
+        print(f"{name}：{len(data_loader.dataset)} 张切片，{len(data_loader)} 个批次")
+
+    # 只查看训练集和验证集的批次；测试集保留给最终评估。
+    for name, data_loader in (("train", train_loader), ("val", val_loader)):
+        batch_images, batch_masks, batch_patients = next(iter(data_loader))
+        print(f"\n{name} 图像批次：{tuple(batch_images.shape)}，{batch_images.dtype}")
+        print(f"{name} 掩膜批次：{tuple(batch_masks.shape)}，{batch_masks.dtype}")
+        print(f"{name} 患者编号：{list(batch_patients)}")
+
+        assert batch_images.shape == (batch_size, 3, 256, 256)
+        assert batch_masks.shape == (batch_size, 1, 256, 256)
+        assert torch.isfinite(batch_images).all()
+        assert set(torch.unique(batch_masks).tolist()).issubset({0.0, 1.0})
+        assert set(batch_patients).issubset(train_ids if name == "train" else val_ids)
+
+    print("\n批次检查通过：新增的第一维 B 是 batch size，可直接输入 U-Net")
 
 if __name__ == "__main__":
     main()
