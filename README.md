@@ -51,7 +51,7 @@ $\mu_c,\sigma_c$ 只使用当前切片该通道的非零像素计算。图像缩
 **卷积块。** 每个块包含两次 $3\times3$ 卷积、BatchNorm 和 ReLU。记 $g_l$ 为第 $l$ 层双卷积块，单次卷积的局部特征计算为：
 
 $$
-h_{o,i,j}=\operatorname{ReLU}\left(\operatorname{BN}\left[
+h_{o,i,j}=\mathrm{ReLU}\left(\mathrm{BN}\left[
 \sum_c\sum_{u=-1}^{1}\sum_{v=-1}^{1}W_{o,c,u,v}\,x_{c,i+u,j+v}
 \right]\right).
 $$
@@ -62,7 +62,7 @@ $$
 
 $$
 E_0=g_0(X),\qquad
-E_l=g_l\!\left(\operatorname{MaxPool}_{2\times2}(E_{l-1})\right),\quad l=1,\ldots,4.
+E_l=g_l\!\left(\mathrm{MaxPool}_{2\times2}(E_{l-1})\right),\quad l=1,\ldots,4.
 $$
 
 池化每次将高宽减半，后续卷积增加通道数，使深层特征覆盖更大的输入区域。对于 $256\times256$ 输入，瓶颈层为 $512\times16\times16$。
@@ -70,9 +70,9 @@ $$
 **解码器与跳跃连接。** 令 $D_4=E_4$：
 
 $$
-U_l=\operatorname{ConvTranspose}_{2\times2,\,s=2}(D_{l+1}),
+U_l=\mathrm{ConvTranspose}_{2\times2,\,s=2}(D_{l+1}),
 \qquad
-D_l=g_l^{\mathrm{dec}}\!\left(\operatorname{Concat}_{C}(E_l,U_l)\right),\quad l=3,2,1,0.
+D_l=g_l^{\mathrm{dec}}\!\left(\mathrm{Concat}_{C}(E_l,U_l)\right),\quad l=3,2,1,0.
 $$
 
 转置卷积学习如何上采样；跳跃连接沿**通道维拼接**对应编码特征，将浅层位置信息送入解码器，双卷积再融合两类特征。例如最后一层将两组 $32\times256\times256$ 拼成 $64\times256\times256$，再输出 32 通道。
@@ -80,7 +80,7 @@ $$
 **输出。** $1\times1$ 卷积映射为单通道 logits，sigmoid 转成前景概率：
 
 $$
-z=\operatorname{Conv}_{1\times1}(D_0),\qquad
+z=\mathrm{Conv}_{1\times1}(D_0),\qquad
 p_i=\sigma(z_i)=\frac{1}{1+e^{-z_i}},\qquad
 \widehat{y}_i=\mathbf{1}[p_i\ge0.5].
 $$
@@ -126,15 +126,15 @@ CUDA 下启用混合精度，并将梯度范数裁剪到 1。固定种子便于�
 测试使用第 29 轮权重、训练时固定的患者划分和阈值 0.5；指标在 $256\times256$ 尺寸上计算。设预测前景集合为 $P$，真实前景为 $G$：
 
 $$
-\operatorname{Dice}=\frac{2|P\cap G|}{|P|+|G|},
+\mathrm{Dice}=\frac{2|P\cap G|}{|P|+|G|},
 \qquad
-\operatorname{IoU}=\frac{|P\cap G|}{|P\cup G|}.
+\mathrm{IoU}=\frac{|P\cap G|}{|P\cup G|}.
 $$
 
 硬指标不加平滑项；预测和真实掩膜都为空时记为 1。患者级 Dice 先累加同一患者所有切片的像素计数，再对患者等权平均：
 
 $$
-\operatorname{Dice}_{\mathrm{patient}}=\frac{1}{K}\sum_{k=1}^{K}
+\mathrm{Dice}_{\mathrm{patient}}=\frac{1}{K}\sum_{k=1}^{K}
 \frac{2\sum_{s\in S_k}|P_s\cap G_s|}
 {\sum_{s\in S_k}|P_s|+\sum_{s\in S_k}|G_s|}.
 $$
